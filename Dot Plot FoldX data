@@ -1,0 +1,103 @@
+```python
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Set the directory paths
+input_folder = '/Users/macos/Desktop/output'
+output_csv = '/Users/macos/Desktop/combined_foldx_data.csv'
+plot_output_folder = '/Users/macos/Desktop/Plots'
+
+# List all FoldX files with .fxout extension
+foldx_files = [f for f in os.listdir(input_folder) if f.endswith('.fxout')]
+
+# Initialize an empty list to store dataframes
+data_list = []
+
+# Loop through each FoldX file and read the data
+for file in foldx_files:
+    # Read the data from the current file
+    current_data = pd.read_csv(os.path.join(input_folder, file), delim_whitespace=True, header=None)
+    
+    # Extract the sample name (remove the .fxout extension)
+    sample_name = os.path.splitext(file)[0]
+    
+    # Add 'FullName' and 'Sample' columns
+    current_data.insert(0, 'Sample', sample_name)
+    
+    # Append the dataframe to the list
+    data_list.append(current_data)
+
+# Combine all dataframes into one
+combined_data = pd.concat(data_list, ignore_index=True)
+
+# Save the combined data to a CSV file
+combined_data.to_csv(output_csv, index=False)
+
+# Read the saved CSV file again
+data = pd.read_csv(output_csv)
+
+# Remove the second column (file path)
+data = data.drop(data.columns[1], axis=1)
+
+# Remove the "_ranked_0_0_ST" suffix from the Sample column
+data['Sample'] = data['Sample'].str.replace('_ranked_0_0_ST$', '', regex=True)
+
+# Rename the columns
+new_column_names = [
+    "Sample", "Total", "Backbone H Bond", "Side Chain H Bond", "Van der Waals", 
+    "Electrostatics", "Polar Solvation", "Hydrophobic Solvation", "Van der Waals Clashes", 
+    "Side Chain Entropy", "Main Chain Entropy", "S Loop Entropy", "M Loop Entropy", 
+    "Cis Bond", "Torsional Clash", "Backbone Clash", "Helix Dipole", "Water Bridge", 
+    "Disulfide", "Electrostatic Kon", "Partial Covalent Bonds", "Energy Ionisation", 
+    "Entropy Complex", "Residue Number"
+]
+data.columns = new_column_names
+
+# Save the modified CSV file
+data.to_csv(output_csv, index=False)
+
+# now plotting
+
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Set the paths
+csv_path = '/Users/macos/Desktop/combined_foldx_data.csv'
+plot_output_folder = '/Users/macos/Desktop/Plots'
+
+# Create output directory if it doesn't exist
+if not os.path.exists(plot_output_folder):
+    os.makedirs(plot_output_folder)
+
+# Load data
+data = pd.read_csv(csv_path)
+
+# Set the sample to normalize to
+normalize_sample = "Wuhan"
+
+# Create dot plots for each numeric column
+for column in data.columns[1:]:
+    plt.figure(figsize=(8, 6))
+    
+    # Create the plot
+    sns.scatterplot(x=data['Sample'], y=data[column], color='turquoise', s=100, alpha=0.7)
+    
+    # Add a horizontal line for normalization
+    if normalize_sample in data['Sample'].values:
+        plt.axhline(y=data.loc[data['Sample'] == normalize_sample, column].values[0], color='violetred', linestyle='--')
+    
+    # Customize the plot
+    plt.xticks(rotation=45, ha='right')
+    plt.title(column.replace('.', ' '), fontsize=16)
+    plt.xlabel('Sample', fontsize=12)
+    plt.ylabel(column.replace('.', ' '), fontsize=12)
+    plt.tight_layout()
+    plt.show()
+    
+    # Save the plot as a PDF
+    plt.savefig(os.path.join(plot_output_folder, f'{column}.pdf'))
+    plt.close()
+```

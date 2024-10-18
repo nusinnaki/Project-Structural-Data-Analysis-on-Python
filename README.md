@@ -10,8 +10,6 @@ Bash commands for running FoldX can be run in JupyterLab using the %bash magic c
 FoldX Analysis of Protein Variants
 This repository contains a comprehensive analysis of protein variants using the FoldX software. FoldX is a powerful tool for predicting the stability of protein structures based on various parameters. This analysis focuses on comparing the stability of different variants and identifying those with optimal characteristics for further study.
 
-# Project-Structural-Data-Analysis-on-Python
-
 This repository facilitates the analysis of protein variants using the FoldX software. FoldX is a computational tool that predicts the stability of protein structures based on various parameters, enabling researchers to compare different variants and identify those with optimal characteristics for further study. The analysis includes reading and combining multiple FoldX `.fxout` files, cleaning and renaming columns for easier analysis, and generating plots for each variable, which are saved as PDFs.
 
 ## Folder Structure

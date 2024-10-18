@@ -1,0 +1,33 @@
+Here I clustered them into twp by simply selecting the existing variantsi to compare them to my synthetic variants.
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the data
+csv_path = '/Users/macos/Desktop/combined_foldx_data.csv'
+data = pd.read_csv(csv_path)
+
+# Define existing variants
+existing_variants = [
+    'XBB.1.16.6', 'Alpha', 'XBB.1.5', 'Omicron_BA.2.86', 
+    'Beta', 'Omicron_EG_5.1', '3Wuhan', 'Gamma', 
+    'Omicron_BA-1', 'Delta', 'XBB.1.16'
+]
+
+# Create a new column to categorize variants
+data['Variant Type'] = data['Sample'].apply(lambda x: 'Existing' if x in existing_variants else 'Synthetic')
+
+# List of numeric columns to plot (excluding 'Sample' and 'Variant Type')
+numeric_columns = data.columns[1:-1]  # Adjust indices based on your DataFrame structure
+
+# Create boxplots for each numeric parameter
+for column in numeric_columns:
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='Variant Type', y=column, data=data, palette=["lightblue", "lightcoral"])
+    plt.title(f'{column} by Variant Type', fontsize=16)
+    plt.ylabel(column, fontsize=14)
+    plt.xlabel('Variant Type', fontsize=14)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()

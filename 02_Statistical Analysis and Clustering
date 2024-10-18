@@ -1,1 +1,85 @@
-s
+# Statistical Analysis
+
+```python
+import pandas as pd
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+
+# Load the data
+csv_path = '/Users/macos/Desktop/combined_foldx_data.csv'
+data = pd.read_csv(csv_path)
+
+# Display summary statistics for each parameter
+summary_stats = data.describe()
+print(summary_stats)
+
+# Define thresholds for key parameters (adjust thresholds as needed)
+best_molecules = data[
+    (data["Van der Waals Clashes"] < data["Van der Waals Clashes"].mean()) &
+    (data["Backbone H Bond"] < data["Backbone H Bond"].mean())
+]
+
+# Sort molecules based on the most important parameters
+best_molecules_sorted = best_molecules.sort_values(by=["Van der Waals Clashes", "Backbone H Bond"])
+print(best_molecules_sorted)
+
+# Perform K-means clustering with 2 clusters
+numeric_columns = data.columns[1:]  # Adjust if necessary
+kmeans = KMeans(n_clusters=2, random_state=42)
+data['Cluster'] = kmeans.fit_predict(data[numeric_columns])
+
+# Visualize clusters using pairplot
+sns.pairplot(data, hue='Cluster', vars=numeric_columns)
+plt.show()
+
+# Display the centroids of the clusters
+centroids = pd.DataFrame(kmeans.cluster_centers_, columns=numeric_columns)
+print(centroids)
+
+# Perform one-way ANOVA for each parameter across clusters
+anova_results = {}
+for column in numeric_columns:
+    anova_results[column] = stats.f_oneway(
+        *[data[data['Cluster'] == cluster][column] for cluster in data['Cluster'].unique()]
+    )
+
+# Print p-values to see if any differences are significant
+for param, result in anova_results.items():
+    print(f"ANOVA for {param}: F-statistic = {result.statistic}, p-value = {result.pvalue}")
+
+# Group variants into two categories based on their cluster
+data['Stability Category'] = data['Cluster'].map({0: 'Stable', 1: 'Unstable'})
+data['Stability Category'] = pd.Categorical(data['Stability Category'], categories=['Stable', 'Unstable'], ordered=True)
+
+# Create a figure for the boxplot with increased height and reduced width
+plt.figure(figsize=(8, 14))  # Thinner and taller
+
+# Create the boxplot for the 'Total' parameter based on stability categories
+sns.boxplot(x='Stability Category', y='Total', data=data, palette=["lightblue", "lightcoral"])  # Stable in light blue, Unstable in light coral
+
+# Add variant names as annotations on the boxplot
+for i in range(len(data)):
+    plt.text(data['Stability Category'][i], data['Total'][i], 
+             data['Sample'][i], 
+             horizontalalignment='left', 
+             size='medium', 
+             color='black', 
+             weight='semibold')
+
+# Customize the plot
+plt.title('Molecule Stability Based on Total Energy', fontsize=16, weight='bold', color='black')  # Title in black
+plt.ylabel('Total Energy', fontsize=14)
+plt.xlabel('Stability Category', fontsize=14)
+
+# Improve grid lines and ticks
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+
+# Adjust the spacing of the plot
+plt.subplots_adjust(bottom=0.2)  # Increase bottom margin if needed
+
+# Show the plot
+plt.show()

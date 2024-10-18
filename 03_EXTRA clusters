@@ -1,4 +1,5 @@
 # Statistical Analysis
+This python code clusters the variants into two by stability properties. But at the end I did not find it significant to continue with.
 
 ```python
 import pandas as pd
